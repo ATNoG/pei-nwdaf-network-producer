@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, List
 import pandas as pd
 
 class CsvReader():
@@ -14,10 +14,10 @@ class CsvReader():
     def get_headers(self) -> List[str]:
         return self.csv.columns.tolist()
 
-    def get_line(self, n : int) -> List[str]:
+    def get_line(self, n : int) -> List[Any]:
         return self.csv.iloc[n].tolist()
 
-    def get_lines(self, list_n : List[int]) -> List[List[str]]:
+    def get_lines(self, list_n : List[int]) -> List[List[Any]]:
         list_lines = []
         for n in list_n:
             list_lines.append(self.get_line(n))

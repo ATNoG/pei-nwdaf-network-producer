@@ -6,7 +6,6 @@ import random
 
 class Sender():
     def __init__(self) -> None:
-        self.csv_path:str
         self.csv_reader:CsvReader = CsvReader()
 
     def load_csv(self, path:str) -> None:
@@ -20,7 +19,7 @@ class Sender():
             self.send_line_csv(line)
 
     def send_random_line_csv(self) -> None:
-        rand = random.randint(0, self.csv_reader.get_how_many_lines())
+        rand = random.randint(0, self.csv_reader.get_how_many_lines() - 1)
         self.send_line_csv(rand)
 
     def send_random_lines_csv(self, how_many:int) -> None:
