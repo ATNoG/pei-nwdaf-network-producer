@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, Dict
 from src.csv_reader import CsvReader
 import random
 import requests
@@ -9,27 +9,21 @@ class Sender():
         self.csv_reader:CsvReader = csv_reader
         self.api_url:str = api_url
 
-    def send_line_csv(self, line_num:int) -> None:
-        line = self.csv_reader.get_line(line_num)
-        self.send_data_to_api(line)
+    
+    def send_next_line(self) -> bool:
+        if not self.csv_reader.next_line_exists():
+            return False
+        
+        line = self.csv_reader.get_next_line()
+        self.send_line_to_api(line)
+        return True
 
-    def send_lines_csv(self, lines_list:List[int]) -> None:
-        for line in lines_list:
-            self.send_line_csv(line)
 
-    def send_random_line_csv(self) -> None:
-        rand = random.randint(0, self.csv_reader.get_how_many_lines() - 1)
-        self.send_line_csv(rand)
-
-    def send_random_lines_csv(self, how_many:int) -> None:
-        for i in range(how_many):
-            self.send_random_line_csv()
-
-    def send_data_to_api(self, data:List[str]) -> None:
+    def send_line_to_api(self, line:Dict[str, Any]) -> None:
         try:
             response = requests.post(
                 self.api_url,
-                json={"data": data},
+                json={"data": line},
                 timeout=5
             )
             response.raise_for_status()
