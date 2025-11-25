@@ -1,6 +1,5 @@
 from typing import Any, Dict
-from src.csv_reader import CsvReader
-import random
+from csv_reader import CsvReader
 import requests
 
 
