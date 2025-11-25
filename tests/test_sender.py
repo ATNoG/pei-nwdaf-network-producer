@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List
 import pytest
 from fastapi.testclient import TestClient
 from src.sender import Sender
@@ -28,10 +28,10 @@ def test_sender_send_random_line(monkeypatch):
     s = Sender(reader, "http://testserver/data")
 
     # Act
-    s.send_random_line_csv()
+    s.send_next_line()
     
     print(received_posts)
     # Assert
     assert len(received_posts) == 1
     assert "data" in received_posts[0]
-    assert isinstance(received_posts[0]["data"], List)
+    assert isinstance(received_posts[0]["data"], Dict)
