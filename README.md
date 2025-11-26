@@ -1,7 +1,10 @@
 # pei-nwdaf-network-producer
 
 ## Usage
-Unzip `data.zip`.
+Extract datasets using:
+```bash 
+tar -xJf data.tar.xz
+```
 
 ## Dataset Attribution
 
