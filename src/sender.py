@@ -4,11 +4,12 @@ import requests
 import time
 
 class Sender():
-    def __init__(self, csv_reader:CsvReader ,api_url:str, id:str="sender") -> None:
+    def __init__(self, csv_reader:CsvReader ,api_url:str, id:str="sender", type:str="mock") -> None:
         self.csv_reader:CsvReader = csv_reader
         self.api_url:str = api_url
         self.batch:list = []
         self.id = id
+        self.type = type
 
     def send_next_line(self) -> bool:
         if not self.csv_reader.next_line_exists():
@@ -24,7 +25,11 @@ class Sender():
             return False
 
         line = self.csv_reader.get_next_line()
-        self.batch.append(line)
+        toAdd = {
+            "analyticsMetadata": line,
+            "timestamp":int(time.time())
+        }
+        self.batch.append(toAdd)
         return True
 
     def send_batch(self) -> None:
@@ -33,9 +38,9 @@ class Sender():
 
         # Attach a timestamp for the batch itself
         payload = {
-            "data": self.batch,
-            "producer_id":self.id,
-            "timestamp": int(time.time())
+            "analyticsData": self.batch,
+            "producerId":self.id,
+            "eventId":self.type,
         }
         try:
             response = requests.post(
