@@ -12,7 +12,7 @@ def test_sender_send_random_line(monkeypatch):
 
     # Load CSV
     reader = CsvReader()
-    reader.load_data_set("dataset/hbahn/cell_data.csv")
+    reader.load_data_set("tests/test.csv")
 
     # Mock API
     client = TestClient(mock_app)
@@ -29,7 +29,7 @@ def test_sender_send_random_line(monkeypatch):
 
     # Act
     s.send_next_line()
-    
+
     print(received_posts)
     # Assert
     assert len(received_posts) == 1
