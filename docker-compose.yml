@@ -1,0 +1,11 @@
+services:
+  producer:
+    container_name: producer-de-pobre
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - nwdaf-network
+networks:
+  nwdaf-network:
+    external: true
