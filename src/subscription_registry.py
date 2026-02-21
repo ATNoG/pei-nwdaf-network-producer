@@ -23,6 +23,7 @@ class SubscriptionRegistry:
     def remove(self, sub_id: str):
         with self.lock:
             self.subscribers.pop(sub_id, None)
+            self.subs_failures.pop(sub_id, None)
 
     def record_failure(self, id: str):
         with self.lock:
@@ -36,7 +37,8 @@ class SubscriptionRegistry:
 
     def all_subscribers(self) -> Dict[str, str]:
         with self.lock:
-            return self.subscribers
+            return self.subscribers.copy()
 
     def get_url(self, id : str) -> str:
-        return self.subscribers[id]
+        with self.lock:
+            return self.subscribers[id]

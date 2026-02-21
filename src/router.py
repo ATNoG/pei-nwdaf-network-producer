@@ -1,5 +1,5 @@
 import logging
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from src.sender import Sender
@@ -30,5 +30,15 @@ class ApiRouter():
         @self.app.delete("/subscriptions/{subscription_id}")
         def unsubscribe(subscription_id : str):
             logger.log(logging.INFO, f"Removing {subscription_id} from subscribers")
-            self.subscription_registry.remove(subscription_id)
+            try:
+                self.subscription_registry.remove(subscription_id)
+                return ({"success" : True}, 200)
+            except KeyError:
+                logger.warning(f"Subscription {subscription_id} not found")
+                raise HTTPException(status_code=404, detail="Subscription not found")
+            except Exception as e:
+                logger.error(f"Failed to remove subscription {subscription_id}: {e}")
+                raise HTTPException(status_code=500, detail="Internal server error")
+
+
 
