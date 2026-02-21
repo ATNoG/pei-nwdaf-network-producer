@@ -45,10 +45,11 @@ class Sender():
             "eventId":self.type,
         }
         
-        for subscriber in self.subscription_registry.all_subscribers():
+        for subscription_id in self.subscription_registry.all_subscribers():
+            payload["subscription_id"] = subscription_id
             try:
                 response = requests.post(
-                    subscriber,
+                    self.subscription_registry.get_url(subscription_id),
                     json=payload,
                     timeout=5
                 )
@@ -56,7 +57,7 @@ class Sender():
                 print(f"Sent batch of {len(self.batch)} lines successfully")
             except requests.RequestException as e:
                 print(f"Error sending batch to API: {e}")
-                self.subscription_registry.record_failure(subscriber)
+                self.subscription_registry.record_failure(subscription_id)
 
         # Clear the batch after sending
         self.batch = []
@@ -65,15 +66,17 @@ class Sender():
 
     def send_line_to_api(self, line:Dict[str, Any]) -> None:
         
-        for subscriber in self.subscription_registry.all_subscribers():
+        for subscription_id in self.subscription_registry.all_subscribers():
             try:
                 response = requests.post(
-                    subscriber,
+                    self.subscription_registry.get_url(subscription_id),
                     json={"data": line,
-                        "timestamp": int(time.time())},
+                        "timestamp": int(time.time()),
+                          "subscription_id" : subscription_id
+                    },
                     timeout=5
                 )
                 response.raise_for_status()
             except requests.RequestException as e:
                 print(f"Error sending data to API: {e}")
-                self.subscription_registry.record_failure(subscriber)
+                self.subscription_registry.record_failure(subscription_id)

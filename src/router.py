@@ -13,8 +13,6 @@ class SubscriveRequest(BaseModel):
     url : str
 
 
-class UnsubscriveRequest(BaseModel):
-    url : str
 
 class ApiRouter():
 
@@ -24,13 +22,13 @@ class ApiRouter():
     
     def create_routes(self):
 
-        @self.app.post("/subscribe")
+        @self.app.post("/subscriptions")
         def subscribe(request : SubscriveRequest):
-            self.subscription_registry.add(request.url)
-            return {"message": f"{request.url} subscribed successfully"}
+            id = self.subscription_registry.add(request.url)
+            return {"subscription_id": id}
 
-        @self.app.delete("/unsubscribe")
-        def unsubscribe(request : UnsubscriveRequest):
-            logger.log(logging.INFO, f"Removing {request.url} from subscribers")
-            self.subscription_registry.remove(request.url)
+        @self.app.delete("/subscriptions/{subscription_id}")
+        def unsubscribe(subscription_id : str):
+            logger.log(logging.INFO, f"Removing {subscription_id} from subscribers")
+            self.subscription_registry.remove(subscription_id)
 
