@@ -32,7 +32,9 @@ class SubscriptionRegistry:
                 logger.log(logging.INFO, f"Subscription with id:{id} took too long to respond")
             
                 if self.subs_failures[id] >= self.max_failures:
-                    self.remove(id)
+                    self.subscribers.pop(id, None)
+                    self.subs_failures.pop(id, None)
+
                     logger.warning(f"{id} didnt respond {self.max_failures} times, assuming it is dead")
 
     def all_subscribers(self) -> Dict[str, str]:
