@@ -38,7 +38,17 @@ def try_numeric(value: str) -> int | float | str:
 
 def send_batch(batch: list, api_url: str, producer_id: str, event_id: str):
 
-    payload = {"analyticsData": batch, "producerId": producer_id, "eventId": event_id}
+    payload = {
+        "analyticsData": [
+            {
+                "analyticsMetadata": record,
+                "timestamp": record.pop("timestamp", int(time.time())),
+            }
+            for record in batch
+        ],
+        "producerId": producer_id,
+        "eventId": event_id,
+    }
 
     try:
         response = requests.post(api_url, json=payload, timeout=5)
@@ -94,7 +104,6 @@ def main(cell_index: int, api_url: str, event_id: str, interval: int):
 
         allowed_fields = None
         if not args.no_filter:
-
             with open(FIELDS_FILE) as f:
                 allowed_fields = set(yaml.safe_load(f))
 
@@ -104,7 +113,7 @@ def main(cell_index: int, api_url: str, event_id: str, interval: int):
         batch.append(record)
 
         # Send batch on interval
-        if True or time.time() - last_send >= interval:
+        if time.time() - last_send >= interval:
             if batch:
                 send_batch(batch, api_url, "packet-capture", event_id)
                 batch = []
