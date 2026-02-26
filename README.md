@@ -32,18 +32,45 @@ Extract datasets:
 tar -xJf data.tar.xz
 ```
 
-Run producer:
+### CSV Producer
+
 ```bash
-python main.py -f merged/latency_data.csv -i 0.5 -a http://data-ingestion:7000/receive
+uv run main_csv.py -f merged/latency_data.csv -i 0.5 -s 5 -y network_trafic
 ```
 
-### CLI Arguments
+#### CLI Arguments
 
 - `-f/--file`: Path to CSV file
 - `-i/--interval`: Delay between reading lines (seconds)
-- `-a/--api`: Target API URL
-- `-s/--send`: Batch send interval
+- `-s/--send`: Batch send interval (seconds)
 - `-y/--type`: Data type identifier
+- `-p/--port`: Port for the subscription API (default: `$PORT` or `8000`)
+
+### Tshark Live Capture Producer
+
+Pipe `tshark` output directly into `main_tshark.py`. Subscribers register themselves dynamically via the subscription API.
+
+```bash
+tshark -ni tap-5g-atnog -T ek -l | uv run python main_tshark.py
+```
+
+#### CLI Arguments
+
+- `-i/--interval`: Delay between processing lines (seconds)
+- `-c/--cell-index`: Cell index added to each record
+- `--no-filter`: Disable field allowlist filtering (`fields.yml`)
+- `-s/--send`: Batch send interval (seconds)
+- `-y/--type`: Data type identifier
+- `-p/--port`: Port for the subscription API (default: `$PORT` or `8000`)
+
+### Subscription API
+
+Both producers expose a REST API to manage subscribers at runtime:
+
+| Method | Path | Body | Description |
+|--------|------|------|-------------|
+| `POST` | `/subscriptions` | `{"url": "http://..."}` | Register a subscriber |
+| `DELETE` | `/subscriptions/{id}` | — | Unregister a subscriber |
 
 ## Docker
 
