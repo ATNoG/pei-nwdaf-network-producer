@@ -3,10 +3,12 @@ from src.csv_reader import CsvReader
 import requests
 import time
 
+from src.subscription_registry import SubscriptionRegistry
+
 class Sender():
-    def __init__(self, csv_reader:CsvReader ,api_url:str, id:str="sender", type:str="mock") -> None:
+    def __init__(self, csv_reader:CsvReader , subscription_registry : SubscriptionRegistry, id:str="sender", type:str="mock") -> None:
         self.csv_reader:CsvReader = csv_reader
-        self.api_url:str = api_url
+        self.subscription_registry:SubscriptionRegistry = subscription_registry
         self.batch:list = []
         self.id = id
         self.type = type
@@ -42,16 +44,20 @@ class Sender():
             "producerId":self.id,
             "eventId":self.type,
         }
-        try:
-            response = requests.post(
-                self.api_url,
-                json=payload,
-                timeout=5
-            )
-            response.raise_for_status()
-            print(f"Sent batch of {len(self.batch)} lines successfully")
-        except requests.RequestException as e:
-            print(f"Error sending batch to API: {e}")
+        
+        for subscription_id in self.subscription_registry.all_subscribers():
+            payload["subscription_id"] = subscription_id
+            try:
+                response = requests.post(
+                    self.subscription_registry.get_url(subscription_id),
+                    json=payload,
+                    timeout=5
+                )
+                response.raise_for_status()
+                print(f"Sent batch of {len(self.batch)} lines successfully")
+            except requests.RequestException as e:
+                print(f"Error sending batch to API: {e}")
+                self.subscription_registry.record_failure(subscription_id)
 
         # Clear the batch after sending
         self.batch = []
@@ -59,13 +65,18 @@ class Sender():
 
 
     def send_line_to_api(self, line:Dict[str, Any]) -> None:
-        try:
-            response = requests.post(
-                self.api_url,
-                json={"data": line,
-                    "timestamp": int(time.time())},
-                timeout=5
-            )
-            response.raise_for_status()
-        except requests.RequestException as e:
-            print(f"Error sending data to API: {e}")
+        
+        for subscription_id in self.subscription_registry.all_subscribers():
+            try:
+                response = requests.post(
+                    self.subscription_registry.get_url(subscription_id),
+                    json={"data": line,
+                        "timestamp": int(time.time()),
+                          "subscription_id" : subscription_id
+                    },
+                    timeout=5
+                )
+                response.raise_for_status()
+            except requests.RequestException as e:
+                print(f"Error sending data to API: {e}")
+                self.subscription_registry.record_failure(subscription_id)
