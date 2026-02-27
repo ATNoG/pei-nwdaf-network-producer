@@ -1,13 +1,14 @@
 import argparse
-import uvicorn
-import threading
 import os
+import threading
+import time
 from time import sleep
+
+import uvicorn
+
+from src.csv_reader import CsvReader
 from src.router import ApiRouter
 from src.sender import Sender
-from src.csv_reader import CsvReader
-import time
-
 from src.subscription_registry import SubscriptionRegistry
 
 
@@ -52,7 +53,7 @@ if __name__ == "__main__":
         help="Interval between sending lines (seconds)",
     )
     parser.add_argument(
-        "-s", "--send", type=str, default=5, help="Interval between batch sends"
+        "-s", "--send", type=int, default=5, help="Interval between batch sends"
     )
     parser.add_argument("-y", "--type", type=str, default="mock", help="Data type")
     parser.add_argument(
