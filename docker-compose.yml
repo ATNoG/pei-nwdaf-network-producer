@@ -1,11 +1,17 @@
 services:
-  producer:
-    container_name: producer-de-pobre
+  producer-csv:
+    container_name: producer-csv
     build:
       context: .
       dockerfile: Dockerfile
+    command: ["uv", "run", "main_csv.py", "-f", "merged/latency_data.csv", "-i", "0.5", "-s", "5", "-y", "network_trafic"]
+    environment:
+      PORT: ${PORT:-8000}
+    ports:
+      - "${PORT:-8000}:${PORT:-8000}"
     networks:
       - nwdaf-network
+
 networks:
   nwdaf-network:
     external: true

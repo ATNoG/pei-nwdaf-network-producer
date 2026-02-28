@@ -12,13 +12,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 
 # Copy dependency files
-COPY requirements.txt ./
-COPY main.py .
+COPY pyproject.toml ./
+COPY uv.lock ./
+COPY main_csv.py .
 COPY data.tar.xz ./
 COPY src/ ./src/
 
 RUN tar -xJf data.tar.xz
 
 # Install dependencies using uv
-RUN uv pip install --system -r requirements.txt
-CMD ["uv", "run", "main.py", "-f", "merged/latency_data.csv", "-i", "0.5", "-a", "http://data-ingestion:7000/receive"]
+RUN uv sync --frozen --no-dev
+CMD ["uv", "run", "main_csv.py", "-f", "merged/latency_data.csv", "-i", "0.5", "-s", "5", "-y", "network_trafic"]

@@ -6,7 +6,7 @@ data/*
 merged
 # C extensions
 *.so
-
+fields.yml
 # Distribution / packaging
 .Python
 build/
