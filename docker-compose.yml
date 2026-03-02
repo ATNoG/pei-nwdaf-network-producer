@@ -4,11 +4,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    # Use original timestamps from the CSV:
     command: ["uv", "run", "main_csv.py", "-f", "merged/latency_data.csv", "-i", "0.5", "-s", "5", "-y", "network_trafic"]
+    # Use current time as timestamp (override CSV values):
+    # command: ["uv", "run", "main_csv.py", "-f", "merged/latency_data.csv", "-i", "0.5", "-s", "5", "-y", "network_trafic", "--override-timestamp"]
     environment:
-      PORT: ${PORT:-8000}
+      PORT: ${PORT:-8001}
     ports:
-      - "${PORT:-8000}:${PORT:-8000}"
+      - "${PORT:-8001}:${PORT:-8001}"
     networks:
       - nwdaf-network
 

@@ -6,12 +6,13 @@ import time
 from src.subscription_registry import SubscriptionRegistry
 
 class Sender():
-    def __init__(self, csv_reader:CsvReader , subscription_registry : SubscriptionRegistry, id:str="sender", type:str="mock") -> None:
+    def __init__(self, csv_reader:CsvReader , subscription_registry : SubscriptionRegistry, id:str="sender", type:str="mock", override_timestamp:bool=False) -> None:
         self.csv_reader:CsvReader = csv_reader
         self.subscription_registry:SubscriptionRegistry = subscription_registry
         self.batch:list = []
         self.id = id
         self.type = type
+        self.override_timestamp = override_timestamp
 
     def send_next_line(self) -> bool:
         if not self.csv_reader.next_line_exists():
@@ -27,6 +28,8 @@ class Sender():
             return False
 
         line = self.csv_reader.get_next_line()
+        if self.override_timestamp:
+            line["timestamp"] = int(time.time())
         toAdd = {
             "analyticsMetadata": line,
             "timestamp":int(time.time())

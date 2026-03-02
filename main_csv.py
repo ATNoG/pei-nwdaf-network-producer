@@ -12,13 +12,13 @@ from src.sender import Sender
 from src.subscription_registry import SubscriptionRegistry
 
 
-def main(file: str, interval: float, send_after: int, type: str, port: int):
+def main(file: str, interval: float, send_after: int, type: str, port: int, override_timestamp: bool = False):
     csv_reader = CsvReader()
     csv_reader.load_data_set(file)
 
     subscription_registry = SubscriptionRegistry(max_failures=5)
 
-    sender = Sender(csv_reader, subscription_registry, type)
+    sender = Sender(csv_reader, subscription_registry, type, override_timestamp=override_timestamp)
     api = ApiRouter(subscription_registry)
 
     api_thread = threading.Thread(target=start_api, args=[api, port])
@@ -57,6 +57,12 @@ if __name__ == "__main__":
     )
     parser.add_argument("-y", "--type", type=str, default="mock", help="Data type")
     parser.add_argument(
+        "--override-timestamp",
+        action="store_true",
+        default=False,
+        help="Inject the current time as 'timestamp' inside each record's analyticsMetadata, overriding any value from the CSV",
+    )
+    parser.add_argument(
         "-p",
         "--port",
         type=int,
@@ -66,4 +72,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    main(args.file, args.interval, args.send, args.type, args.port)
+    main(args.file, args.interval, args.send, args.type, args.port, args.override_timestamp)
