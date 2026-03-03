@@ -22,4 +22,4 @@ RUN tar -xJf data.tar.xz
 
 # Install dependencies using uv
 RUN uv sync --frozen --no-dev
-CMD ["uv", "run", "main_csv.py", "-f", "merged/latency_data.csv", "-i", "0.5", "-s", "5", "-y", "network_trafic"]
+CMD ["uv", "run", "--no-sync", "main_csv.py", "-f", "merged/latency_data.csv", "-i", "0.5", "-s", "5", "-y", "network_trafic"]
