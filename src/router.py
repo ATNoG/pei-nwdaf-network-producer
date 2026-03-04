@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 class SubscriveRequest(BaseModel):
     url : str
+    heartbeat_url : str
 
 
 
@@ -24,7 +25,7 @@ class ApiRouter():
 
         @self.app.post("/subscriptions")
         def subscribe(request : SubscriveRequest):
-            id = self.subscription_registry.add(request.url)
+            id = self.subscription_registry.add(request.url, request.heartbeat_url)
             return {"subscription_id": id}
 
         @self.app.delete("/subscriptions/{subscription_id}")
@@ -39,6 +40,5 @@ class ApiRouter():
             except Exception as e:
                 logger.error(f"Failed to remove subscription {subscription_id}: {e}")
                 raise HTTPException(status_code=500, detail="Internal server error")
-
 
 

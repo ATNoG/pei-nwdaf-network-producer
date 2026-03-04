@@ -9,21 +9,24 @@ logger = logging.getLogger(__name__)
 class SubscriptionRegistry:
     def __init__(self, max_failures: int = 5):
         self.subscribers: Dict[str, str] = {}
+        self.heartbeat : Dict[str, str] = {}
         self.subs_failures : Dict[str, int] = {}
         self.max_failures = max_failures
         self.lock = threading.Lock()
 
-    def add(self, url: str):
+    def add(self, url: str, heartbeat_url : str):
         subscription_id = str(uuid.uuid4())
         with self.lock: 
             self.subscribers[subscription_id] = url
             self.subs_failures[subscription_id] = 0
+            self.heartbeat[subscription_id] = heartbeat_url
         return subscription_id
 
     def remove(self, sub_id: str):
         with self.lock:
             self.subscribers.pop(sub_id, None)
             self.subs_failures.pop(sub_id, None)
+            self.heartbeat.pop(sub_id, None)
 
     def record_failure(self, id: str):
         with self.lock:
@@ -34,6 +37,7 @@ class SubscriptionRegistry:
                 if self.subs_failures[id] >= self.max_failures:
                     self.subscribers.pop(id, None)
                     self.subs_failures.pop(id, None)
+                    self.heartbeat.pop(id, None)
 
                     logger.warning(f"{id} didnt respond {self.max_failures} times, assuming it is dead")
 
@@ -44,3 +48,7 @@ class SubscriptionRegistry:
     def get_url(self, id : str) -> str:
         with self.lock:
             return self.subscribers[id]
+
+    def get_heartbeat_url(self, id : str) -> str:
+        with self.lock:
+            return self.heartbeat[id]

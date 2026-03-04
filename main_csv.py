@@ -3,7 +3,7 @@ import os
 import threading
 import time
 from time import sleep
-
+import requests
 import uvicorn
 
 from src.csv_reader import CsvReader
@@ -12,7 +12,7 @@ from src.sender import Sender
 from src.subscription_registry import SubscriptionRegistry
 
 
-def main(file: str, interval: float, send_after: int, type: str, port: int):
+def main(file: str, interval: float, send_after: int, type: str, port: int, heartbeat_interval : int):
     csv_reader = CsvReader()
     csv_reader.load_data_set(file)
 
@@ -23,6 +23,11 @@ def main(file: str, interval: float, send_after: int, type: str, port: int):
 
     api_thread = threading.Thread(target=start_api, args=[api, port])
     api_thread.start()
+    
+    made_progress = False #variable to check if we are doing stuff
+
+    heartbeat_thread = threading.Thread(target=send_heartbeat,args=[made_progress, subscription_registry, heartbeat_interval])
+    heartbeat_thread.start()
 
     last_send: int = int(time.time())
     while True:
@@ -34,6 +39,7 @@ def main(file: str, interval: float, send_after: int, type: str, port: int):
             sender.send_batch()
             last_send = int(time.time())
 
+        made_progress = True
         sleep(interval)
 
 
@@ -41,6 +47,17 @@ def start_api(api: ApiRouter, port: int):
     api.create_routes()
     uvicorn.run(api.app, host="0.0.0.0", port=port)
 
+def send_heartbeat(made_progress : bool , subscription_registry : SubscriptionRegistry, heartbeat_interval : int):
+    while True:
+        if not made_progress:
+            sleep(heartbeat_interval)
+            continue
+        
+        for producer in subscription_registry.all_subscribers():
+            heartbeat_url = subscription_registry.get_heartbeat_url(producer)
+            requests.post(heartbeat_url, data={"status" : "active"})
+        
+        sleep(heartbeat_interval)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Send CSV lines to API with interval")
@@ -63,7 +80,14 @@ if __name__ == "__main__":
         default=int(os.getenv("PORT", 8000)),
         help="Port of subscription api",
     )
+    
+    parser.add_argument(
+        "-h", 
+        "--heartbeat-interval", 
+        type=int, 
+        default=int(os.getenv("HEARTBEAT_INTERVAL", 5))
+    )
 
     args = parser.parse_args()
 
-    main(args.file, args.interval, args.send, args.type, args.port)
+    main(args.file, args.interval, args.send, args.type, args.port, args.heartbeat_interval)
