@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
 
-COPY main_tshark.py fields.yml ./
+COPY main_tshark.py ./
 COPY src/ ./src/
 
-ENTRYPOINT ["/bin/sh", "-c", "tshark -ni $CAPTURE_INTERFACE -T ek -l | uv run --no-sync main_tshark.py -i ${INTERVAL:-0} -c ${CELL_INDEX:-1} -s ${SEND_INTERVAL:-5} -y ${EVENT_TYPE:-network_trafic} -p ${PORT:-8124}"]
+ENTRYPOINT ["/bin/sh", "-c", "tshark -ni $CAPTURE_INTERFACE -T ek -l | uv run --no-sync main_tshark.py --no-filter -i ${INTERVAL:-0} -c ${CELL_INDEX:-1} -s ${SEND_INTERVAL:-5} -y ${EVENT_TYPE:-network_trafic} -p ${PORT:-8124}"]
