@@ -12,6 +12,25 @@ services:
     networks:
       - nwdaf-network
 
+  producer-tshark:
+    container_name: producer-tshark
+    build:
+      context: .
+      dockerfile: Dockerfile.tshark
+    environment:
+      CAPTURE_INTERFACE: ${CAPTURE_INTERFACE:-dummy0}
+      PORT: ${TSHARK_PORT:-8124}
+      CELL_INDEX: ${CELL_INDEX:-1}
+      INTERVAL: ${INTERVAL:-0}
+      SEND_INTERVAL: ${SEND_INTERVAL:-5}
+      EVENT_TYPE: ${EVENT_TYPE:-network_trafic}
+    ports:
+      - "${TSHARK_PORT:-8124}:${TSHARK_PORT:-8124}"
+    network_mode: host
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+
 networks:
   nwdaf-network:
     external: true

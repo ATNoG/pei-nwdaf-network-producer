@@ -146,7 +146,7 @@ def main(
 
         record = flatten(data["layers"], allowed_fields)
         record["cell_index"] = cell_index
-        record["timestamp"] = int(data.get("timestamp", time.time() * 1000)) / 1000
+        record["timestamp"] = time.time()
         batch.append(record)
 
         if time.time() - last_send >= send_after:
