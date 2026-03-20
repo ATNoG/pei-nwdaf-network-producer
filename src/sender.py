@@ -51,10 +51,12 @@ class Sender():
                 response = requests.post(
                     self.subscription_registry.get_url(subscription_id),
                     json=payload,
-                    timeout=5
+                    timeout=10
                 )
                 response.raise_for_status()
                 print(f"Sent batch of {len(self.batch)} lines successfully")
+                self.subscription_registry.record_success(subscription_id)
+
             except requests.RequestException as e:
                 print(f"Error sending batch to API: {e}")
                 self.subscription_registry.record_failure(subscription_id)
