@@ -59,6 +59,7 @@ def send_heartbeat(made_progress : threading.Event , subscription_registry : Sub
         for producer in subscription_registry.all_subscribers():
             heartbeat_url = subscription_registry.get_heartbeat_url(producer) + "/" + producer
             requests.post(heartbeat_url, data={"status" : "active"})
+            subscription_registry.record_success(producer)
         
         sleep(heartbeat_interval)
 
