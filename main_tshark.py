@@ -135,18 +135,17 @@ def main(
         if not data.get("layers", False):
             continue
 
-        if not os.path.isfile(FIELDS_FILE):
-            logger.error(f"[{FIELDS_FILE}] not found. Please provide one")
-            exit(1)
-
         allowed_fields = None
         if not no_filter:
+            if not os.path.isfile(FIELDS_FILE):
+                logger.error(f"[{FIELDS_FILE}] not found. Please provide one")
+                exit(1)
             with open(FIELDS_FILE) as f:
                 allowed_fields = set(yaml.safe_load(f))
 
         record = flatten(data["layers"], allowed_fields)
         record["cell_index"] = cell_index
-        record["timestamp"] = int(data.get("timestamp", time.time() * 1000)) / 1000
+        record["timestamp"] = time.time()
         batch.append(record)
 
         if time.time() - last_send >= send_after:
