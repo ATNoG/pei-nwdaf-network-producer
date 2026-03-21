@@ -7,7 +7,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class SubscriptionRegistry:
-    def __init__(self, max_failures: int = 10):
+    def __init__(self, max_failures: int = 30):
         self.subscribers: Dict[str, str] = {}
         self.subs_failures : Dict[str, int] = {}
         self.max_failures = max_failures
