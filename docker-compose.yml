@@ -24,6 +24,7 @@ services:
       INTERVAL: ${INTERVAL:-0}
       SEND_INTERVAL: ${SEND_INTERVAL:-5}
       EVENT_TYPE: ${EVENT_TYPE:-network_trafic}
+      HOST: ${TSHARK_HOST:-producer-tshark}
     ports:
       - "${TSHARK_PORT:-8124}:${TSHARK_PORT:-8124}"
     network_mode: host
