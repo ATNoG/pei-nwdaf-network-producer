@@ -1,14 +1,14 @@
 import argparse
-import uvicorn
-import threading
 import json
 import logging
 import os
 import sys
+import threading
 import time
 from time import sleep
 
 import requests
+import uvicorn
 import yaml
 
 from src.router import ApiRouter
@@ -53,7 +53,13 @@ def flatten(layers: dict, allowed_fields: set | None = None) -> dict:
             elif isinstance(value, list):
                 continue
             elif allowed_fields is None or key in allowed_fields:
-                result[key.replace(".", "_")] = try_numeric(value)
+                clean_key = key.replace(".", "_")
+
+                prefix = clean_key.split("_")[0]
+                if clean_key.startswith(prefix + "_" + prefix + "_"):
+                    clean_key = clean_key[len(prefix) + 1 :]
+
+                result[clean_key] = try_numeric(value)
 
         return result
 

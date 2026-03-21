@@ -50,8 +50,11 @@ uv run main_csv.py -f merged/latency_data.csv -i 0.5 -s 5 -y network_trafic
 
 Pipe `tshark` output directly into `main_tshark.py`. Subscribers register themselves dynamically via the subscription API.
 
+
+**Note:** This script expects packet data in **TShark EK format** (Elastic/Kibana compatible JSON).
+
 ```bash
-tshark -ni tap-5g-atnog -T ek -l | uv run python main_tshark.py
+tshark -ni <interface> -T ek -l | uv run python main_tshark.py
 ```
 
 #### CLI Arguments
