@@ -79,6 +79,8 @@ class Sender():
                     timeout=5
                 )
                 response.raise_for_status()
+                if response.status_code != 202:
+                    self.subscription_registry.record_failure(subscription_id)
             except requests.RequestException as e:
                 print(f"Error sending data to API: {e}")
                 self.subscription_registry.record_failure(subscription_id)
