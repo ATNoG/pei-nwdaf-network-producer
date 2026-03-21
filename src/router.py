@@ -41,4 +41,12 @@ class ApiRouter():
                 logger.error(f"Failed to remove subscription {subscription_id}: {e}")
                 raise HTTPException(status_code=500, detail="Internal server error")
 
-
+        
+        @self.app.get("/heartbeat/{subscription_id}")
+        def heartbeat(subscription_id : str):
+            logger.info(f"Got heartbeat from {subscription_id}")
+            if subscription_id in self.subscription_registry.all_subscribers():
+                self.subscription_registry.record_success(subscription_id)
+                return {"status" : "ok"}
+            else:
+                return {"status" : "not_subscribed"}
