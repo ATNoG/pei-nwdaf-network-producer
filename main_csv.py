@@ -16,7 +16,7 @@ def main(file: str, interval: float, send_after: int, type: str, port: int, host
     csv_reader = CsvReader()
     csv_reader.load_data_set(file)
 
-    subscription_registry = SubscriptionRegistry(max_failures=5)
+    subscription_registry = SubscriptionRegistry()
 
     sender = Sender(csv_reader, subscription_registry, type)
     api = ApiRouter(subscription_registry, host, port)
