@@ -12,14 +12,14 @@ from src.sender import Sender
 from src.subscription_registry import SubscriptionRegistry
 
 
-def main(file: str, interval: float, send_after: int, type: str, port: int):
+def main(file: str, interval: float, send_after: int, type: str, port: int, host : str):
     csv_reader = CsvReader()
     csv_reader.load_data_set(file)
 
     subscription_registry = SubscriptionRegistry(max_failures=5)
 
     sender = Sender(csv_reader, subscription_registry, type)
-    api = ApiRouter(subscription_registry)
+    api = ApiRouter(subscription_registry, host, port)
 
     api_thread = threading.Thread(target=start_api, args=[api, port])
     api_thread.start()
@@ -63,6 +63,15 @@ if __name__ == "__main__":
         default=int(os.getenv("PORT", 8000)),
         help="Port of subscription api",
     )
+
+    parser.add_argument(
+        "-ho",
+        "--host",
+        type=str,
+        default=(os.getenv("HOST", "producer-csv")),
+        help="Host of producer api"
+    )
+
     args = parser.parse_args()
 
-    main(args.file, args.interval, args.send, args.type, args.port)
+    main(args.file, args.interval, args.send, args.type, args.port, args.host)

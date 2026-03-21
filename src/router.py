@@ -11,22 +11,22 @@ logger = logging.getLogger(__name__)
 
 class SubscriveRequest(BaseModel):
     url : str
-    heartbeat_url : str
 
 
 
 class ApiRouter():
 
-    def __init__(self, subscription_registry : SubscriptionRegistry) -> None:
+    def __init__(self, subscription_registry : SubscriptionRegistry, host : str, port : int) -> None:
         self.subscription_registry : SubscriptionRegistry = subscription_registry
         self.app = FastAPI()
-    
+        self.heartbeat_url = f"http://{host}:{port}/heartbeat"
+
     def create_routes(self):
 
         @self.app.post("/subscriptions")
         def subscribe(request : SubscriveRequest):
-            id = self.subscription_registry.add(request.url, request.heartbeat_url)
-            return {"subscription_id": id}
+            id = self.subscription_registry.add(request.url)
+            return {"subscription_id": id, "heartbeat_url" : f"{self.heartbeat_url}/{id}"}
 
         @self.app.delete("/subscriptions/{subscription_id}")
         def unsubscribe(subscription_id : str):
