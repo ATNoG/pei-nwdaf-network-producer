@@ -80,7 +80,7 @@ def send_batch(
         "analyticsData": [
             {
                 "analyticsMetadata": record,
-                "timestamp": record.pop("timestamp", int(time.time())),
+                "timestamp": int(time.time())
             }
             for record in batch
         ],
@@ -119,6 +119,14 @@ def main(
     batch = []
     last_send: int = int(time.time())
 
+    allowed_fields = None
+    if not no_filter:
+        if not os.path.isfile(FIELDS_FILE):
+            logger.error(f"[{FIELDS_FILE}] not found. Please provide one")
+            exit(1)
+        with open(FIELDS_FILE) as f:
+            allowed_fields = set(yaml.safe_load(f))
+
     # Read tshark JSON lines from stdin
     for line in sys.stdin:
         line = line.strip()
@@ -134,14 +142,6 @@ def main(
 
         if not data.get("layers", False):
             continue
-
-        allowed_fields = None
-        if not no_filter:
-            if not os.path.isfile(FIELDS_FILE):
-                logger.error(f"[{FIELDS_FILE}] not found. Please provide one")
-                exit(1)
-            with open(FIELDS_FILE) as f:
-                allowed_fields = set(yaml.safe_load(f))
 
         record = flatten(data["layers"], allowed_fields)
         record["cell_index"] = cell_index
