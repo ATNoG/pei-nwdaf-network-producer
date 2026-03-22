@@ -37,6 +37,11 @@ class SubscriptionRegistry:
 
                     logger.warning(f"{id} didnt respond {self.max_failures} times, assuming it is dead")
 
+    def record_success(self, id: str):
+        with self.lock:
+            if id in self.subs_failures:
+                self.subs_failures[id] = 0
+
     def all_subscribers(self) -> Dict[str, str]:
         with self.lock:
             return self.subscribers.copy()

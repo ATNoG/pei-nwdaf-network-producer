@@ -54,6 +54,7 @@ class Sender():
                     timeout=5
                 )
                 response.raise_for_status()
+                self.subscription_registry.record_success(subscription_id)
                 print(f"Sent batch of {len(self.batch)} lines successfully")
             except requests.RequestException as e:
                 print(f"Error sending batch to API: {e}")
