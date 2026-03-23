@@ -66,6 +66,37 @@ def flatten(layers: dict, allowed_fields: set | None = None) -> dict:
     return _flatten_intern(layers)
 
 
+def aggregate_batch(batch: list) -> list:
+    """Aggregate packet records by (ip_src, ip_dst), averaging all numeric fields per group."""
+    if len(batch) <= 1:
+        return batch
+
+    groups: dict[tuple, dict] = {}  # (ip_src, ip_dst) -> {field: [values]}
+
+    for record in batch:
+        key = (record.get("ip_src", ""), record.get("ip_dst", ""))
+        if key not in groups:
+            groups[key] = {"_first": record, "_sums": {}, "_counts": {}}
+        sums = groups[key]["_sums"]
+        counts = groups[key]["_counts"]
+        for field, val in record.items():
+            if isinstance(val, (int, float)):
+                sums[field] = sums.get(field, 0.0) + val
+                counts[field] = counts.get(field, 0) + 1
+
+    results = []
+    for group in groups.values():
+        first = group["_first"]
+        sums = group["_sums"]
+        counts = group["_counts"]
+        record = {k: v for k, v in first.items() if not isinstance(v, (int, float))}
+        for field in sums:
+            record[field] = sums[field] / counts[field]
+        results.append(record)
+
+    return results
+
+
 def send_batch(
     batch: list,
     subscription_registry: SubscriptionRegistry,
@@ -116,7 +147,7 @@ def _sender_loop(
         with batch_lock:
             to_send = list(batch_ref)
             batch_ref.clear()
-        send_batch(to_send, subscription_registry, PRODUCER_ID, event_id)
+        send_batch(aggregate_batch(to_send), subscription_registry, PRODUCER_ID, event_id)
 
 
 def main(
@@ -170,6 +201,9 @@ def main(
             continue
 
         record = flatten(data["layers"], allowed_fields)
+        ip_src = record.get("ip_src", "")
+        if isinstance(ip_src, str) and ip_src.startswith("172.19.0.") and int(ip_src.split(".")[-1]) < 3:
+            continue
         record["cell_index"] = cell_index
         record["timestamp"] = time.time()
         with batch_lock:
