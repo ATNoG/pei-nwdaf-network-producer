@@ -157,10 +157,11 @@ def main(
     send_after: float,
     no_filter: bool,
     port: int,
+    host : str
 ):
 
-    subscription_registry = SubscriptionRegistry(max_failures=5)
-    api = ApiRouter(subscription_registry)
+    subscription_registry = SubscriptionRegistry()
+    api = ApiRouter(subscription_registry, host, port)
 
     api_thread = threading.Thread(target=start_api, args=[api, port])
     api_thread.start()
@@ -264,7 +265,17 @@ if __name__ == "__main__":
         help="Port of subscription api",
     )
 
+    parser.add_argument(
+        "-ho",
+        "--host",
+        type=str,
+        default=(os.getenv("HOST", "producer-csv")),
+        help="Host of producer api"
+    )
+
+
+
     args = parser.parse_args()
     main(
-        args.cell_index, args.type, args.interval, args.send, args.no_filter, args.port
+        args.cell_index, args.type, args.interval, args.send, args.no_filter, args.port, args.host
     )

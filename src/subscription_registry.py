@@ -7,7 +7,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class SubscriptionRegistry:
-    def __init__(self, max_failures: int = 5):
+    def __init__(self, max_failures: int = 30):
         self.subscribers: Dict[str, str] = {}
         self.subs_failures : Dict[str, int] = {}
         self.max_failures = max_failures
@@ -36,6 +36,11 @@ class SubscriptionRegistry:
                     self.subs_failures.pop(id, None)
 
                     logger.warning(f"{id} didnt respond {self.max_failures} times, assuming it is dead")
+    
+    def record_success(self, id : str):
+        with self.lock:
+            if id in self.subs_failures:
+                self.subs_failures[id] = 0
 
     def record_success(self, id: str):
         with self.lock:
@@ -49,3 +54,4 @@ class SubscriptionRegistry:
     def get_url(self, id : str) -> str:
         with self.lock:
             return self.subscribers[id]
+

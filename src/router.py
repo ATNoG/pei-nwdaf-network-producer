@@ -16,16 +16,17 @@ class SubscriveRequest(BaseModel):
 
 class ApiRouter():
 
-    def __init__(self, subscription_registry : SubscriptionRegistry) -> None:
+    def __init__(self, subscription_registry : SubscriptionRegistry, host : str, port : int) -> None:
         self.subscription_registry : SubscriptionRegistry = subscription_registry
         self.app = FastAPI()
-    
+        self.heartbeat_url = f"http://{host}:{port}/heartbeat"
+
     def create_routes(self):
 
         @self.app.post("/subscriptions")
         def subscribe(request : SubscriveRequest):
             id = self.subscription_registry.add(request.url)
-            return {"subscription_id": id}
+            return {"subscription_id": id, "heartbeat_url" : f"{self.heartbeat_url}/{id}"}
 
         @self.app.delete("/subscriptions/{subscription_id}")
         def unsubscribe(subscription_id : str):
@@ -40,5 +41,12 @@ class ApiRouter():
                 logger.error(f"Failed to remove subscription {subscription_id}: {e}")
                 raise HTTPException(status_code=500, detail="Internal server error")
 
-
-
+        
+        @self.app.get("/heartbeat/{subscription_id}")
+        def heartbeat(subscription_id : str):
+            logger.info(f"Got heartbeat from {subscription_id}")
+            if subscription_id in self.subscription_registry.all_subscribers():
+                self.subscription_registry.record_success(subscription_id)
+                return {"status" : "ok"}
+            else:
+                return {"status" : "not_subscribed"}

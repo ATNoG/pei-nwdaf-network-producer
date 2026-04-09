@@ -3,7 +3,7 @@ import os
 import threading
 import time
 from time import sleep
-
+import requests
 import uvicorn
 
 from src.csv_reader import CsvReader
@@ -12,17 +12,18 @@ from src.sender import Sender
 from src.subscription_registry import SubscriptionRegistry
 
 
-def main(file: str, interval: float, send_after: int, type: str, port: int):
+def main(file: str, interval: float, send_after: int, type: str, port: int, host : str):
     csv_reader = CsvReader()
     csv_reader.load_data_set(file)
 
-    subscription_registry = SubscriptionRegistry(max_failures=5)
+    subscription_registry = SubscriptionRegistry()
 
     sender = Sender(csv_reader, subscription_registry, type)
-    api = ApiRouter(subscription_registry)
+    api = ApiRouter(subscription_registry, host, port)
 
     api_thread = threading.Thread(target=start_api, args=[api, port])
     api_thread.start()
+    
 
     last_send: int = int(time.time())
     while True:
@@ -40,7 +41,6 @@ def main(file: str, interval: float, send_after: int, type: str, port: int):
 def start_api(api: ApiRouter, port: int):
     api.create_routes()
     uvicorn.run(api.app, host="0.0.0.0", port=port)
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Send CSV lines to API with interval")
@@ -64,6 +64,14 @@ if __name__ == "__main__":
         help="Port of subscription api",
     )
 
+    parser.add_argument(
+        "-ho",
+        "--host",
+        type=str,
+        default=(os.getenv("HOST", "producer-csv")),
+        help="Host of producer api"
+    )
+
     args = parser.parse_args()
 
-    main(args.file, args.interval, args.send, args.type, args.port)
+    main(args.file, args.interval, args.send, args.type, args.port, args.host)
